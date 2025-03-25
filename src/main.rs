@@ -1,8 +1,8 @@
 mod config;
+mod package;
 mod repo;
 
 use anyhow::Result;
-use std::path::PathBuf;
 
 fn main() -> Result<()> {
     // Config 로드 테스트
@@ -31,6 +31,11 @@ fn main() -> Result<()> {
                     // 현재 브랜치 표시
                     if let Ok(branch) = repo::get_current_branch(&repo.path) {
                         println!("   브랜치: {}", branch);
+                    }
+
+                    // 패키지 매니저 감지
+                    if let Ok(pkg_manager) = package::detect_package_manager(&repo.path) {
+                        println!("   패키지 매니저: {}", pkg_manager);
                     }
                 }
                 Err(e) => println!("   상태 확인 실패: {}", e),
