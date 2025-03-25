@@ -290,17 +290,17 @@ pub fn update_package_workflow(
     push_branch(&repo.path, &branch_name, dry_run)?;
 
     // 8. Create PR (optional) - this function will be implemented in github.rs
-    // if create_pr {
-    //     if let Err(e) = crate::github::create_pr(
-    //         &repo.path,
-    //         &repo.github_url,
-    //         &branch_name,
-    //         commit_message,
-    //         dry_run,
-    //     ) {
-    //         eprintln!("Warning: Failed to create PR: {}", e);
-    //     }
-    // }
+    if create_pr {
+        if let Err(e) = crate::github::create_pr(
+            &repo.path,
+            &repo.github_url,
+            &branch_name,
+            commit_message,
+            dry_run,
+        ) {
+            eprintln!("Warning: Failed to create PR: {}", e);
+        }
+    }
 
     println!(
         "✅ Successfully updated {} to {} in {}",
