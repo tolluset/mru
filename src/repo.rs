@@ -2,20 +2,11 @@ use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::config::Repository;
+use crate::config::{expand_tilde, Repository};
 
-/// 물결표(~)를 포함한 경로를 절대 경로로 확장
 pub fn expand_path(path: &str) -> Result<PathBuf> {
-    if path.starts_with("~/") {
-        let home =
-            dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
-
-        // ~/ 부분을 제거하고 홈 디렉토리와 결합
-        let path_without_tilde = &path[2..];
-        Ok(home.join(path_without_tilde))
-    } else {
-        Ok(PathBuf::from(path))
-    }
+    let expanded = expand_tilde(path)?;
+    Ok(PathBuf::from(expanded))
 }
 
 /// 레포지토리 상태 확인

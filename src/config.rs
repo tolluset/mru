@@ -34,7 +34,19 @@ impl Config {
         let content = fs::read_to_string(&config_path).context("Failed to read config file")?;
         let config: Config = toml::from_str(&content).context("Failed to parse config file")?;
 
-        Ok(config)
+        let mut expanded_repos = Vec::new();
+        for repo in &config.repositories {
+            let expanded_path = expand_tilde(&repo.path)?;
+            expanded_repos.push(Repository {
+                path: expanded_path,
+                github_url: repo.github_url.clone(),
+            });
+        }
+
+        Ok(Config {
+            default_commit_message: config.default_commit_message,
+            repositories: expanded_repos,
+        })
     }
 
     pub fn save(&self) -> Result<()> {
@@ -50,30 +62,37 @@ impl Config {
     }
 
     pub fn add_repository(&mut self, path: String, github_url: String) -> Result<()> {
-        // 경로에 물결표가 있으면 확장
+        // 중복 체크 (물결표 확장 후)
         let expanded_path = expand_tilde(&path)?;
 
-        // 중복 체크
-        if self
-            .repositories
-            .iter()
-            .any(|r| r.path == expanded_path || r.github_url == github_url)
-        {
-            anyhow::bail!("Repository already exists in config");
+        for repo in &self.repositories {
+            let repo_expanded_path = expand_tilde(&repo.path)?;
+            if repo_expanded_path == expanded_path || repo.github_url == github_url {
+                anyhow::bail!("Repository already exists in config");
+            }
         }
 
-        self.repositories.push(Repository {
-            path: expanded_path,
-            github_url,
-        });
+        // 원래 경로 저장 (물결표 유지)
+        self.repositories.push(Repository { path, github_url });
         self.save()?;
 
         Ok(())
     }
 
     pub fn remove_repository(&mut self, path: &str) -> Result<()> {
+        let expanded_path = expand_tilde(path)?;
         let initial_len = self.repositories.len();
-        self.repositories.retain(|r| r.path != path);
+
+        // 확장된 경로로 비교하여 제거
+        let mut i = 0;
+        while i < self.repositories.len() {
+            let repo_expanded_path = expand_tilde(&self.repositories[i].path)?;
+            if repo_expanded_path == expanded_path {
+                self.repositories.remove(i);
+            } else {
+                i += 1;
+            }
+        }
 
         if self.repositories.len() == initial_len {
             anyhow::bail!("Repository not found: {}", path);
