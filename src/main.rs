@@ -1,6 +1,8 @@
 mod config;
+mod repo;
 
 use anyhow::Result;
+use std::path::PathBuf;
 
 fn main() -> Result<()> {
     // Config 로드 테스트
@@ -10,12 +12,29 @@ fn main() -> Result<()> {
     println!("기본 커밋 메시지: {}", config.default_commit_message);
     println!("등록된 레포지토리 수: {}", config.repositories.len());
 
-    // 등록된 레포지토리 출력
+    // 등록된 레포지토리 출력 및 상태 확인
     if !config.repositories.is_empty() {
         println!("\n등록된 레포지토리 목록:");
         for (i, repo) in config.repositories.iter().enumerate() {
             println!("{}. 경로: {}", i + 1, repo.path);
             println!("   GitHub URL: {}", repo.github_url);
+
+            // 레포지토리 상태 확인
+            match repo::check_repository(repo) {
+                Ok(has_changes) => {
+                    if has_changes {
+                        println!("   상태: 변경사항 있음");
+                    } else {
+                        println!("   상태: 깨끗함");
+                    }
+
+                    // 현재 브랜치 표시
+                    if let Ok(branch) = repo::get_current_branch(&repo.path) {
+                        println!("   브랜치: {}", branch);
+                    }
+                }
+                Err(e) => println!("   상태 확인 실패: {}", e),
+            }
         }
     } else {
         println!("\n등록된 레포지토리가 없습니다.");

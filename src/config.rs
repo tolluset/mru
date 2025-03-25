@@ -50,16 +50,22 @@ impl Config {
     }
 
     pub fn add_repository(&mut self, path: String, github_url: String) -> Result<()> {
+        // 경로에 물결표가 있으면 확장
+        let expanded_path = expand_tilde(&path)?;
+
         // 중복 체크
         if self
             .repositories
             .iter()
-            .any(|r| r.path == path || r.github_url == github_url)
+            .any(|r| r.path == expanded_path || r.github_url == github_url)
         {
             anyhow::bail!("Repository already exists in config");
         }
 
-        self.repositories.push(Repository { path, github_url });
+        self.repositories.push(Repository {
+            path: expanded_path,
+            github_url,
+        });
         self.save()?;
 
         Ok(())
@@ -86,4 +92,17 @@ pub fn get_config_path() -> Result<PathBuf> {
     let config_path = home.join(".config").join("mru").join("config.toml");
 
     Ok(config_path)
+}
+
+pub fn expand_tilde(path: &str) -> Result<String> {
+    if path.starts_with("~/") {
+        let home =
+            dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
+
+        // ~/ 부분을 제거하고 홈 디렉토리와 결합
+        let path_without_tilde = &path[2..];
+        Ok(home.join(path_without_tilde).to_string_lossy().to_string())
+    } else {
+        Ok(path.to_string())
+    }
 }
