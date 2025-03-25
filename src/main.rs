@@ -57,6 +57,10 @@ fn main() -> Result<()> {
         } => {
             cli::handle_clone(&mut config, github_url, output.as_deref(), *add)?;
         }
+
+        cli::Commands::SetPackageManager { name } => {
+            cli::handle_set_package_manager(&mut config, name)?;
+        }
     }
 
     Ok(())

@@ -4,6 +4,7 @@ use std::process::Command;
 
 use crate::config::Repository;
 use crate::repo::expand_path;
+use crate::config::Config;
 
 /// Get current branch name
 pub fn get_current_branch(repo_path: &str) -> Result<String> {
@@ -241,6 +242,7 @@ pub fn update_package_workflow(
     commit_message: &str,
     create_pr: bool,
     dry_run: bool,
+    config: &Config,
 ) -> Result<()> {
     println!("\n=== Processing repository: {} ===", repo.path);
 
@@ -268,8 +270,12 @@ pub fn update_package_workflow(
         return Ok(());
     }
 
-    // 4. Run pnpm install (this function is in package.rs)
-    crate::package::run_install(&repo.path, dry_run)?;
+    // 4. Run package install with default package manager
+    let pkg_manager = match crate::package::detect_package_manager(&repo.path) {
+        Ok(manager) => manager,
+        Err(_) => config.default_package_manager.clone().unwrap(),
+    };
+    crate::package::run_install_with_manager(&repo.path, &pkg_manager, dry_run)?;
 
     // 5. Stage changes
     stage_changes(

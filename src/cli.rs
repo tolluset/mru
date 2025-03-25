@@ -81,6 +81,12 @@ pub enum Commands {
         #[arg(short, long)]
         add: bool,
     },
+
+    /// Set default package manager
+    SetPackageManager {
+        /// Package manager name (npm, yarn, pnpm)
+        name: String,
+    },
 }
 
 /// Handle update command
@@ -120,6 +126,7 @@ pub fn handle_update(
             &commit_message,
             pull_request,
             dry_run,
+            config,
         ) {
             eprintln!("Error processing repository {}: {}", repo.path, e);
 
@@ -332,6 +339,19 @@ pub fn handle_clone(
         handle_add_repo(config, &path, github_url)?;
     }
 
+    Ok(())
+}
+
+/// Handle set package manager command
+pub fn handle_set_package_manager(config: &mut Config, name: &str) -> Result<()> {
+    let valid_managers = vec!["npm", "yarn", "pnpm"];
+    if !valid_managers.contains(&name) {
+        anyhow::bail!("Invalid package manager. Must be one of: {:?}", valid_managers);
+    }
+
+    config.default_package_manager = Some(name.to_string());
+    config.save()?;
+    println!("Default package manager set to: {}", name);
     Ok(())
 }
 

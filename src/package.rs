@@ -115,34 +115,31 @@ pub fn detect_package_manager(repo_path: &str) -> Result<String> {
         return Ok("npm".to_string());
     }
 
-    // Default to npm
-    Ok("npm".to_string())
+    // No lock file found
+    anyhow::bail!("No package manager lock file found")
 }
 
-/// Run package installation
-pub fn run_install(repo_path: &str, dry_run: bool) -> Result<()> {
+/// Run package install with specified package manager
+pub fn run_install_with_manager(repo_path: &str, pkg_manager: &str, dry_run: bool) -> Result<()> {
     let path = expand_path(repo_path)?;
-    let package_manager = detect_package_manager(repo_path)?;
 
     if dry_run {
-        println!("Would run '{}' install in {}", package_manager, repo_path);
+        println!("Would run {} install in {}", pkg_manager, repo_path);
         return Ok(());
     }
 
-    println!("Running '{}' install in {}", package_manager, repo_path);
+    println!("Running {} install in {}", pkg_manager, repo_path);
 
-    let output = Command::new(&package_manager)
+    let status = Command::new(pkg_manager)
         .current_dir(&path)
         .arg("install")
-        .output()
-        .context(format!("Failed to execute {} install", package_manager))?;
+        .status()
+        .context(format!("Failed to run {} install", pkg_manager))?;
 
-    if !output.status.success() {
-        let error = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("{} install failed: {}", package_manager, error);
+    if !status.success() {
+        anyhow::bail!("{} install failed", pkg_manager);
     }
 
-    println!("{} install completed successfully", package_manager);
     Ok(())
 }
 

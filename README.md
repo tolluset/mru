@@ -98,6 +98,20 @@ Options:
 --dry-run, -d: Show what would happen without making changes
 ```
 
+- **Set default package manager**
+
+```bash
+mru set-package-manager <PACKAGE_MANAGER>
+
+# Example
+mru set-package-manager pnpm
+```
+
+MRU determines the package manager in the following order:
+1. Check repository's lock files (pnpm-lock.yaml, yarn.lock, package-lock.json)
+2. Check configured default package manager
+3. Use npm if neither is found
+
 - **Compare package versions**
 
 ```bash

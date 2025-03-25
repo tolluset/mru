@@ -7,6 +7,7 @@ use std::path::PathBuf;
 pub struct Config {
     pub default_commit_message: String,
     pub repositories: Vec<Repository>,
+    pub default_package_manager: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -25,6 +26,7 @@ impl Config {
             let default_config = Config {
                 default_commit_message: "chore: update dependencies".to_string(),
                 repositories: Vec::new(),
+                default_package_manager: Some("npm".to_string()),
             };
             let toml = toml::to_string(&default_config)?;
             fs::write(&config_path, toml)?;
@@ -46,6 +48,7 @@ impl Config {
         Ok(Config {
             default_commit_message: config.default_commit_message,
             repositories: expanded_repos,
+            default_package_manager: config.default_package_manager,
         })
     }
 
