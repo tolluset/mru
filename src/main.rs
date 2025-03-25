@@ -1,5 +1,6 @@
 mod config;
 mod git;
+mod github;
 mod package;
 mod repo;
 
@@ -37,6 +38,13 @@ fn main() -> Result<()> {
                     // 패키지 매니저 감지
                     if let Ok(pkg_manager) = package::detect_package_manager(&repo.path) {
                         println!("   패키지 매니저: {}", pkg_manager);
+                    }
+
+                    // GitHub CLI 확인
+                    match github::check_gh_cli() {
+                        Ok(true) => println!("   GitHub CLI: 인증됨"),
+                        Ok(false) => println!("   GitHub CLI: 인증 필요"),
+                        Err(_) => println!("   GitHub CLI: 설치되지 않음"),
                     }
                 }
                 Err(e) => println!("   상태 확인 실패: {}", e),
