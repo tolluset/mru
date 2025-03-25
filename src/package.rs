@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use serde_json::{json, Value};
+use serde_json::{json, Value, Map};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -21,10 +21,7 @@ pub fn update_package(
     }
 
     let content = fs::read_to_string(&package_json_path).context("Failed to read package.json")?;
-
-    let mut package_json: Value =
-        serde_json::from_str(&content).context("Failed to parse package.json")?;
-
+    let mut package_json: Value = serde_json::from_str(&content).context("Failed to parse package.json")?;
     let mut updated = false;
 
     // Update dependencies
@@ -82,7 +79,6 @@ pub fn update_package(
     }
 
     if updated && !dry_run {
-        // Save file
         let formatted = serde_json::to_string_pretty(&package_json)?;
         fs::write(package_json_path, formatted)?;
         println!("Saved changes to package.json in {}", repo_path);
