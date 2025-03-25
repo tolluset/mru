@@ -1,4 +1,5 @@
 mod config;
+mod git;
 mod package;
 mod repo;
 
@@ -19,8 +20,8 @@ fn main() -> Result<()> {
             println!("{}. 경로: {}", i + 1, repo.path);
             println!("   GitHub URL: {}", repo.github_url);
 
-            // 레포지토리 상태 확인
-            match repo::check_repository(repo) {
+            // Git 상태 확인
+            match git::check_status(&repo.path) {
                 Ok(has_changes) => {
                     if has_changes {
                         println!("   상태: 변경사항 있음");
@@ -29,7 +30,7 @@ fn main() -> Result<()> {
                     }
 
                     // 현재 브랜치 표시
-                    if let Ok(branch) = repo::get_current_branch(&repo.path) {
+                    if let Ok(branch) = git::get_current_branch(&repo.path) {
                         println!("   브랜치: {}", branch);
                     }
 
