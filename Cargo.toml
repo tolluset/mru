@@ -2,6 +2,10 @@
 name = "mru"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+authors = ["tolluset"]
+description = "MRU - Update packages across multiple repositories"
+repository = "https://github.com/tolluset/mru"
 
 [dependencies]
 anyhow = "1.0.97"
