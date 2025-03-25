@@ -83,7 +83,7 @@ pub enum Commands {
     },
 }
 
-/// 업데이트 명령 처리
+/// Handle update command
 pub fn handle_update(
     config: &Config,
     package: &str,
@@ -134,7 +134,7 @@ pub fn handle_update(
     Ok(())
 }
 
-/// 레포지토리 추가 명령 처리
+/// Handle add repository command
 pub fn handle_add_repo(config: &mut Config, path: &str, github_url: &str) -> Result<()> {
     match config.add_repository(path.to_string(), github_url.to_string()) {
         Ok(_) => {
@@ -148,7 +148,7 @@ pub fn handle_add_repo(config: &mut Config, path: &str, github_url: &str) -> Res
     }
 }
 
-/// 레포지토리 제거 명령 처리
+/// Handle remove repository command
 pub fn handle_remove_repo(config: &mut Config, path: &str) -> Result<()> {
     match config.remove_repository(path) {
         Ok(_) => {
@@ -162,7 +162,7 @@ pub fn handle_remove_repo(config: &mut Config, path: &str) -> Result<()> {
     }
 }
 
-/// 레포지토리 목록 명령 처리
+/// Handle list repositories command
 pub fn handle_list_repos(config: &Config) -> Result<()> {
     if config.repositories.is_empty() {
         println!("No repositories configured");
@@ -199,7 +199,7 @@ pub fn handle_list_repos(config: &Config) -> Result<()> {
     Ok(())
 }
 
-/// 패키지 버전 비교 명령 처리
+/// Handle package version comparison command
 pub fn handle_compare(config: &Config, package: &str) -> Result<()> {
     if config.repositories.is_empty() {
         println!("No repositories configured");
@@ -225,7 +225,7 @@ pub fn handle_compare(config: &Config, package: &str) -> Result<()> {
     Ok(())
 }
 
-/// 패키지 목록 명령 처리
+/// Handle list packages command
 pub fn handle_list_packages(config: &Config, repo_path: Option<&str>) -> Result<()> {
     if config.repositories.is_empty() && repo_path.is_none() {
         println!("No repositories configured");
@@ -233,7 +233,7 @@ pub fn handle_list_packages(config: &Config, repo_path: Option<&str>) -> Result<
     }
 
     let repositories = if let Some(path) = repo_path {
-        // 특정 레포지토리만 처리
+        // Process specific repository only
         let repo = config
             .repositories
             .iter()
@@ -242,7 +242,7 @@ pub fn handle_list_packages(config: &Config, repo_path: Option<&str>) -> Result<
 
         vec![repo]
     } else {
-        // 모든 레포지토리 처리
+        // Process all repositories
         config.repositories.iter().collect()
     };
 
@@ -254,7 +254,7 @@ pub fn handle_list_packages(config: &Config, repo_path: Option<&str>) -> Result<
                 if packages.is_empty() {
                     println!("  No packages found");
                 } else {
-                    // 패키지 타입별로 그룹화
+                    // Group packages by type
                     let mut deps = Vec::new();
                     let mut dev_deps = Vec::new();
                     let mut peer_deps = Vec::new();
@@ -304,11 +304,11 @@ pub fn handle_clone(
     output: Option<&str>,
     add: bool,
 ) -> Result<()> {
-    // 출력 디렉토리 결정
+    // Determine output directory
     let output_dir = if let Some(dir) = output {
         dir.to_string()
     } else {
-        // URL에서 레포지토리 이름 추출
+        // Extract repository name from URL
         let repo_name = github_url
             .split('/')
             .last()
@@ -319,10 +319,10 @@ pub fn handle_clone(
         repo_name
     };
 
-    // 레포지토리 클론
+    // Clone repository
     github::clone_repository(github_url, &output_dir)?;
 
-    // 설정에 추가
+    // Add to config
     if add {
         let path = std::fs::canonicalize(&output_dir)
             .map_err(|e| anyhow::anyhow!("Failed to resolve path: {}", e))?
@@ -335,7 +335,7 @@ pub fn handle_clone(
     Ok(())
 }
 
-/// 사용자에게 계속할지 물어보기
+/// Ask user if they want to continue
 fn prompt_continue() -> bool {
     use std::io::{self, Write};
 

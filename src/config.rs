@@ -62,7 +62,7 @@ impl Config {
     }
 
     pub fn add_repository(&mut self, path: String, github_url: String) -> Result<()> {
-        // 중복 체크 (물결표 확장 후)
+        // Check for duplicates (after tilde expansion)
         let expanded_path = expand_tilde(&path)?;
 
         for repo in &self.repositories {
@@ -72,7 +72,7 @@ impl Config {
             }
         }
 
-        // 원래 경로 저장 (물결표 유지)
+        // Save original path (with tilde)
         self.repositories.push(Repository { path, github_url });
         self.save()?;
 
@@ -83,7 +83,7 @@ impl Config {
         let expanded_path = expand_tilde(path)?;
         let initial_len = self.repositories.len();
 
-        // 확장된 경로로 비교하여 제거
+        // Remove by comparing expanded paths
         let mut i = 0;
         while i < self.repositories.len() {
             let repo_expanded_path = expand_tilde(&self.repositories[i].path)?;
@@ -104,10 +104,10 @@ impl Config {
 }
 
 pub fn get_config_path() -> Result<PathBuf> {
-    // 홈 디렉토리 가져오기
+    // Get home directory
     let home = dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
 
-    // ~/.config/mru/config.toml 경로 생성
+    // Create ~/.config/mru/config.toml path
     let config_path = home.join(".config").join("mru").join("config.toml");
 
     Ok(config_path)
@@ -118,7 +118,7 @@ pub fn expand_tilde(path: &str) -> Result<String> {
         let home =
             dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
 
-        // ~/ 부분을 제거하고 홈 디렉토리와 결합
+        // Remove ~/ and combine with home directory
         let path_without_tilde = &path[2..];
         Ok(home.join(path_without_tilde).to_string_lossy().to_string())
     } else {

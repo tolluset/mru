@@ -6,7 +6,7 @@ use std::process::Command;
 
 use crate::repo::expand_path;
 
-/// package.json 파일에서 특정 패키지 버전 업데이트
+/// Update specific package version in package.json
 pub fn update_package(
     repo_path: &str,
     package_name: &str,
@@ -27,7 +27,7 @@ pub fn update_package(
 
     let mut updated = false;
 
-    // dependencies 업데이트
+    // Update dependencies
     if let Some(deps) = package_json.get_mut("dependencies") {
         if let Some(pkg) = deps.get_mut(package_name) {
             if pkg.as_str().unwrap_or("") != version {
@@ -45,7 +45,7 @@ pub fn update_package(
         }
     }
 
-    // devDependencies 업데이트
+    // Update devDependencies
     if let Some(dev_deps) = package_json.get_mut("devDependencies") {
         if let Some(pkg) = dev_deps.get_mut(package_name) {
             if pkg.as_str().unwrap_or("") != version {
@@ -63,7 +63,7 @@ pub fn update_package(
         }
     }
 
-    // peerDependencies 업데이트
+    // Update peerDependencies
     if let Some(peer_deps) = package_json.get_mut("peerDependencies") {
         if let Some(pkg) = peer_deps.get_mut(package_name) {
             if pkg.as_str().unwrap_or("") != version {
@@ -82,7 +82,7 @@ pub fn update_package(
     }
 
     if updated && !dry_run {
-        // 파일 저장
+        // Save file
         let formatted = serde_json::to_string_pretty(&package_json)?;
         fs::write(package_json_path, formatted)?;
         println!("Saved changes to package.json in {}", repo_path);
@@ -96,30 +96,30 @@ pub fn update_package(
     Ok(updated)
 }
 
-/// 패키지 매니저 감지 (pnpm, yarn, npm)
+/// Detect package manager (pnpm, yarn, npm)
 pub fn detect_package_manager(repo_path: &str) -> Result<String> {
     let path = expand_path(repo_path)?;
 
-    // pnpm-lock.yaml 확인
+    // Check for pnpm-lock.yaml
     if path.join("pnpm-lock.yaml").exists() {
         return Ok("pnpm".to_string());
     }
 
-    // yarn.lock 확인
+    // Check for yarn.lock
     if path.join("yarn.lock").exists() {
         return Ok("yarn".to_string());
     }
 
-    // package-lock.json 확인
+    // Check for package-lock.json
     if path.join("package-lock.json").exists() {
         return Ok("npm".to_string());
     }
 
-    // 기본값은 npm
+    // Default to npm
     Ok("npm".to_string())
 }
 
-/// 패키지 설치 실행
+/// Run package installation
 pub fn run_install(repo_path: &str, dry_run: bool) -> Result<()> {
     let path = expand_path(repo_path)?;
     let package_manager = detect_package_manager(repo_path)?;
@@ -146,7 +146,7 @@ pub fn run_install(repo_path: &str, dry_run: bool) -> Result<()> {
     Ok(())
 }
 
-/// 패키지 버전 확인
+/// Check package version
 pub fn get_package_version(repo_path: &str, package_name: &str) -> Result<Option<String>> {
     let path = expand_path(repo_path)?;
     let package_json_path = path.join("package.json");
@@ -191,7 +191,7 @@ pub fn get_package_version(repo_path: &str, package_name: &str) -> Result<Option
     Ok(None)
 }
 
-/// 모든 패키지 목록 가져오기
+/// Get all package list
 pub fn list_all_packages(repo_path: &str) -> Result<Vec<(String, String, String)>> {
     let path = expand_path(repo_path)?;
     let package_json_path = path.join("package.json");
@@ -255,7 +255,7 @@ pub fn list_all_packages(repo_path: &str) -> Result<Vec<(String, String, String)
     Ok(packages)
 }
 
-/// 여러 레포지토리에서 특정 패키지 버전 비교
+/// Compare package versions across multiple repositories
 pub fn compare_package_versions(
     repos: &[&str],
     package_name: &str,

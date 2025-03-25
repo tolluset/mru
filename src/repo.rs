@@ -9,22 +9,22 @@ pub fn expand_path(path: &str) -> Result<PathBuf> {
     Ok(PathBuf::from(expanded))
 }
 
-/// 레포지토리 상태 확인
+/// Check repository status
 pub fn check_repository(repo: &Repository) -> Result<bool> {
     let path = Path::new(&repo.path);
 
-    // 경로가 존재하는지 확인
+    // Check if path exists
     if !path.exists() {
         anyhow::bail!("Repository path does not exist: {}", repo.path);
     }
 
-    // .git 디렉토리가 있는지 확인
+    // Check if .git directory exists
     let git_dir = path.join(".git");
     if !git_dir.exists() {
         anyhow::bail!("Not a git repository: {}", repo.path);
     }
 
-    // git status 실행하여 변경사항 확인
+    // Run git status to check for changes
     let output = Command::new("git")
         .current_dir(&repo.path)
         .args(["status", "--porcelain"])
@@ -35,13 +35,13 @@ pub fn check_repository(repo: &Repository) -> Result<bool> {
         anyhow::bail!("Failed to get git status for repository: {}", repo.path);
     }
 
-    // 변경사항이 있는지 확인 (출력이 비어있지 않으면 변경사항 있음)
+    // Check if there are changes (non-empty output means changes)
     let has_changes = !output.stdout.is_empty();
 
     Ok(has_changes)
 }
 
-/// 현재 브랜치 이름 가져오기
+/// Get current branch name
 pub fn get_current_branch(repo_path: &str) -> Result<String> {
     let output = Command::new("git")
         .current_dir(repo_path)
@@ -61,7 +61,7 @@ pub fn get_current_branch(repo_path: &str) -> Result<String> {
     Ok(branch)
 }
 
-/// 브랜치 생성
+/// Create branch
 pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Result<()> {
     if dry_run {
         println!("Would create branch '{}' in {}", branch_name, repo_path);
@@ -70,10 +70,10 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
 
     println!("Creating branch '{}' in {}", branch_name, repo_path);
 
-    // 기존 브랜치 저장
+    // Save original branch
     let original_branch = get_current_branch(repo_path)?;
 
-    // 브랜치가 이미 존재하는지 확인
+    // Check if branch already exists
     let output = Command::new("git")
         .current_dir(repo_path)
         .args(["branch"])
@@ -87,7 +87,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
         .any(|line| line.trim().ends_with(branch_name));
 
     if branch_exists {
-        // 브랜치가 이미 존재하면 체크아웃
+        // If branch exists, check out
         let status = Command::new("git")
             .current_dir(repo_path)
             .args(["checkout", branch_name])
@@ -98,7 +98,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
             anyhow::bail!("Failed to checkout existing branch: {}", branch_name);
         }
     } else {
-        // 새 브랜치 생성
+        // Create new branch
         let status = Command::new("git")
             .current_dir(repo_path)
             .args(["checkout", "-b", branch_name])
@@ -106,7 +106,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
             .context("Failed to create new branch")?;
 
         if !status.success() {
-            // 실패 시 원래 브랜치로 돌아가기
+            // Return to original branch on failure
             let _ = Command::new("git")
                 .current_dir(repo_path)
                 .args(["checkout", &original_branch])
@@ -119,7 +119,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
     Ok(())
 }
 
-/// 원래 브랜치로 돌아가기
+/// Return to original branch
 pub fn checkout_original_branch(
     repo_path: &str,
     original_branch: &str,
@@ -151,7 +151,7 @@ pub fn checkout_original_branch(
     Ok(())
 }
 
-/// 레포지토리 풀
+/// Pull repository
 pub fn pull_repository(repo_path: &str, dry_run: bool) -> Result<()> {
     if dry_run {
         println!("Would pull latest changes in {}", repo_path);

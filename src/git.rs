@@ -5,7 +5,7 @@ use std::process::Command;
 use crate::config::Repository;
 use crate::repo::expand_path;
 
-/// 현재 브랜치 이름 가져오기
+/// Get current branch name
 pub fn get_current_branch(repo_path: &str) -> Result<String> {
     let path = expand_path(repo_path)?;
 
@@ -27,11 +27,11 @@ pub fn get_current_branch(repo_path: &str) -> Result<String> {
     Ok(branch)
 }
 
-/// 브랜치 생성
+/// Create branch
 pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Result<String> {
     let path = expand_path(repo_path)?;
 
-    // 현재 브랜치 저장 (나중에 실패 시 복원용)
+    // Save current branch (for restoration in case of failure)
     let original_branch = get_current_branch(repo_path)?;
 
     if dry_run {
@@ -41,7 +41,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
 
     println!("Creating branch '{}' in {}", branch_name, repo_path);
 
-    // 브랜치가 이미 존재하는지 확인
+    // Check if branch already exists
     let output = Command::new("git")
         .current_dir(&path)
         .args(["branch", "--list", branch_name])
@@ -51,7 +51,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
     let branch_exists = !output.stdout.is_empty();
 
     if branch_exists {
-        // 브랜치가 이미 존재하면 체크아웃
+        // If branch exists, check out
         let status = Command::new("git")
             .current_dir(&path)
             .args(["checkout", branch_name])
@@ -62,7 +62,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
             anyhow::bail!("Failed to checkout existing branch: {}", branch_name);
         }
     } else {
-        // 새 브랜치 생성
+        // If branch does not exist, create new branch
         let status = Command::new("git")
             .current_dir(&path)
             .args(["checkout", "-b", branch_name])
@@ -77,7 +77,7 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
     Ok(original_branch)
 }
 
-/// 변경사항 스테이징
+/// Stage changes
 pub fn stage_changes(repo_path: &str, files: &[&str], dry_run: bool) -> Result<()> {
     let path = expand_path(repo_path)?;
 
@@ -104,7 +104,7 @@ pub fn stage_changes(repo_path: &str, files: &[&str], dry_run: bool) -> Result<(
     Ok(())
 }
 
-/// 변경사항 커밋
+/// Commit changes
 pub fn commit_changes(repo_path: &str, message: &str, dry_run: bool) -> Result<()> {
     let path = expand_path(repo_path)?;
 
@@ -115,7 +115,7 @@ pub fn commit_changes(repo_path: &str, message: &str, dry_run: bool) -> Result<(
 
     println!("Committing changes with message: '{}'", message);
 
-    // 스테이징된 변경사항이 있는지 확인
+    // Check if there are staged changes
     let output = Command::new("git")
         .current_dir(&path)
         .args(["diff", "--staged", "--name-only"])
@@ -127,7 +127,7 @@ pub fn commit_changes(repo_path: &str, message: &str, dry_run: bool) -> Result<(
         return Ok(());
     }
 
-    // 커밋 실행
+    // Commit changes
     let status = Command::new("git")
         .current_dir(&path)
         .args(["commit", "-m", message])
@@ -141,7 +141,7 @@ pub fn commit_changes(repo_path: &str, message: &str, dry_run: bool) -> Result<(
     Ok(())
 }
 
-/// 브랜치 푸시
+/// Push branch
 pub fn push_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Result<()> {
     let path = expand_path(repo_path)?;
 
@@ -165,7 +165,7 @@ pub fn push_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Result<
     Ok(())
 }
 
-/// 원래 브랜치로 돌아가기
+/// Return to original branch
 pub fn checkout_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Result<()> {
     let path = expand_path(repo_path)?;
 
@@ -189,7 +189,7 @@ pub fn checkout_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Res
     Ok(())
 }
 
-/// 레포지토리 상태 확인
+/// Check repository status
 pub fn check_status(repo_path: &str) -> Result<bool> {
     let path = expand_path(repo_path)?;
 
@@ -203,13 +203,13 @@ pub fn check_status(repo_path: &str) -> Result<bool> {
         anyhow::bail!("Failed to check git status");
     }
 
-    // 변경사항이 있는지 확인 (출력이 비어있지 않으면 변경사항 있음)
+    // Check if there are changes (non-empty output means changes)
     let has_changes = !output.stdout.is_empty();
 
     Ok(has_changes)
 }
 
-/// 레포지토리 풀
+/// Pull repository
 pub fn pull_repository(repo_path: &str, dry_run: bool) -> Result<()> {
     let path = expand_path(repo_path)?;
 
@@ -233,7 +233,7 @@ pub fn pull_repository(repo_path: &str, dry_run: bool) -> Result<()> {
     Ok(())
 }
 
-/// 패키지 업데이트 작업 수행
+/// Execute package update workflow
 pub fn update_package_workflow(
     repo: &Repository,
     package_name: &str,
@@ -244,10 +244,10 @@ pub fn update_package_workflow(
 ) -> Result<()> {
     println!("\n=== Processing repository: {} ===", repo.path);
 
-    // 1. 현재 브랜치 저장
+    // 1. Save current branch
     let original_branch = get_current_branch(&repo.path)?;
 
-    // 2. 브랜치 생성
+    // 2. Create branch
     let branch_name = format!(
         "update-{}-{}",
         package_name,
@@ -255,7 +255,7 @@ pub fn update_package_workflow(
     );
     create_branch(&repo.path, &branch_name, dry_run)?;
 
-    // 3. package.json 업데이트 (이 함수는 package.rs에 있음)
+    // 3. Update package.json (this function is in package.rs)
     let updated = crate::package::update_package(&repo.path, package_name, version, dry_run)?;
 
     if !updated {
@@ -263,15 +263,15 @@ pub fn update_package_workflow(
             "Package '{}' is already at version '{}', skipping",
             package_name, version
         );
-        // 원래 브랜치로 돌아가기
+        // Return to original branch
         checkout_branch(&repo.path, &original_branch, dry_run)?;
         return Ok(());
     }
 
-    // 4. pnpm install 실행 (이 함수는 package.rs에 있음)
+    // 4. Run pnpm install (this function is in package.rs)
     crate::package::run_install(&repo.path, dry_run)?;
 
-    // 5. 변경사항 스테이징
+    // 5. Stage changes
     stage_changes(
         &repo.path,
         &[
@@ -283,13 +283,13 @@ pub fn update_package_workflow(
         dry_run,
     )?;
 
-    // 6. 변경사항 커밋
+    // 6. Commit changes
     commit_changes(&repo.path, commit_message, dry_run)?;
 
-    // 7. GitHub에 푸시
+    // 7. Push to GitHub
     push_branch(&repo.path, &branch_name, dry_run)?;
 
-    // 8. PR 생성 (선택적) - 이 함수는 github.rs에 구현 예정
+    // 8. Create PR (optional) - this function will be implemented in github.rs
     // if create_pr {
     //     if let Err(e) = crate::github::create_pr(
     //         &repo.path,
@@ -307,7 +307,7 @@ pub fn update_package_workflow(
         package_name, version, repo.path
     );
 
-    // 9. 원래 브랜치로 돌아가기
+    // 9. Return to original branch
     checkout_branch(&repo.path, &original_branch, dry_run)?;
 
     Ok(())

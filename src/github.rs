@@ -4,7 +4,7 @@ use std::process::Command;
 
 use crate::repo::expand_path;
 
-/// GitHub CLI가 설치되어 있고 인증되어 있는지 확인
+/// GitHub CLI is installed and authenticated
 pub fn check_gh_cli() -> Result<bool> {
     let output = Command::new("gh")
         .args(["auth", "status"])
@@ -14,7 +14,7 @@ pub fn check_gh_cli() -> Result<bool> {
     Ok(output.status.success())
 }
 
-/// Pull Request 생성
+/// Create Pull Request
 pub fn create_pr(
     repo_path: &str,
     github_url: &str,
@@ -32,7 +32,7 @@ pub fn create_pr(
         return Ok(String::from("dry-run-pr-url"));
     }
 
-    // GitHub CLI가 설치되어 있는지 확인
+    // Check if GitHub CLI is installed
     if !check_gh_cli()? {
         anyhow::bail!(
             "GitHub CLI is not installed or not authenticated. Please run 'gh auth login'"
@@ -44,7 +44,7 @@ pub fn create_pr(
         branch_name, title
     );
 
-    // PR 생성
+    // Create PR
     let output = Command::new("gh")
         .current_dir(&path)
         .args([
@@ -63,11 +63,11 @@ pub fn create_pr(
     if !output.status.success() {
         let error = String::from_utf8_lossy(&output.stderr);
 
-        // PR이 이미 존재하는 경우 (에러 메시지에서 확인)
+        // PR already exists
         if error.contains("already exists") || error.contains("already a pull request") {
             println!("PR already exists for branch '{}'", branch_name);
 
-            // 기존 PR URL 가져오기
+            // Get existing PR URL
             let url_output = Command::new("gh")
                 .current_dir(&path)
                 .args([
@@ -97,23 +97,23 @@ pub fn create_pr(
         anyhow::bail!("Failed to create PR: {}", error);
     }
 
-    // PR URL 가져오기
+    // Get PR URL
     let url_output = String::from_utf8_lossy(&output.stdout).trim().to_string();
     println!("PR created: {}", url_output);
 
     Ok(url_output)
 }
 
-/// PR 상태 확인
+/// Check PR status
 pub fn check_pr_status(repo_path: &str, branch_name: &str) -> Result<String> {
     let path = expand_path(repo_path)?;
 
-    // GitHub CLI가 설치되어 있는지 확인
+    // Check if GitHub CLI is installed
     if !check_gh_cli()? {
         anyhow::bail!("GitHub CLI is not installed or not authenticated");
     }
 
-    // PR 상태 확인
+    // Check PR status
     let output = Command::new("gh")
         .current_dir(&path)
         .args([
@@ -130,7 +130,7 @@ pub fn check_pr_status(repo_path: &str, branch_name: &str) -> Result<String> {
         .context("Failed to check PR status")?;
 
     if !output.status.success() {
-        // PR이 없는 경우
+        // PR does not exist
         return Ok(String::from("NO_PR"));
     }
 
@@ -138,16 +138,16 @@ pub fn check_pr_status(repo_path: &str, branch_name: &str) -> Result<String> {
     Ok(status)
 }
 
-/// PR 목록 가져오기
+/// Get PR list
 pub fn list_prs(repo_path: &str, state: &str) -> Result<Vec<(String, String, String)>> {
     let path = expand_path(repo_path)?;
 
-    // GitHub CLI가 설치되어 있는지 확인
+    // Check if GitHub CLI is installed
     if !check_gh_cli()? {
         anyhow::bail!("GitHub CLI is not installed or not authenticated");
     }
 
-    // PR 목록 가져오기
+    // Get PR list
     let output = Command::new("gh")
         .current_dir(&path)
         .args([
@@ -182,18 +182,18 @@ pub fn list_prs(repo_path: &str, state: &str) -> Result<Vec<(String, String, Str
     Ok(result)
 }
 
-/// PR 병합
+/// Merge PR
 pub fn merge_pr(repo_path: &str, branch_name: &str, merge_method: &str) -> Result<bool> {
     let path = expand_path(repo_path)?;
 
-    // GitHub CLI가 설치되어 있는지 확인
+    // Check if GitHub CLI is installed
     if !check_gh_cli()? {
         anyhow::bail!("GitHub CLI is not installed or not authenticated");
     }
 
     println!("Merging PR for branch '{}'", branch_name);
 
-    // PR 병합
+    // Merge PR
     let output = Command::new("gh")
         .current_dir(&path)
         .args(["pr", "merge", "--head", branch_name, "--", merge_method])
@@ -203,7 +203,7 @@ pub fn merge_pr(repo_path: &str, branch_name: &str, merge_method: &str) -> Resul
     if !output.status.success() {
         let error = String::from_utf8_lossy(&output.stderr);
 
-        // PR이 이미 병합된 경우
+        // PR already merged
         if error.contains("already merged") {
             println!("PR for branch '{}' is already merged", branch_name);
             return Ok(true);
@@ -216,16 +216,16 @@ pub fn merge_pr(repo_path: &str, branch_name: &str, merge_method: &str) -> Resul
     Ok(true)
 }
 
-/// 레포지토리 포크
+/// Fork repository
 pub fn fork_repository(github_url: &str, output_dir: &str) -> Result<String> {
-    // GitHub CLI가 설치되어 있는지 확인
+    // Check if GitHub CLI is installed
     if !check_gh_cli()? {
         anyhow::bail!("GitHub CLI is not installed or not authenticated");
     }
 
     println!("Forking repository: {}", github_url);
 
-    // 레포지토리 포크 및 클론
+    // Fork repository and clone
     let output = Command::new("gh")
         .args(["repo", "fork", github_url, "--clone", "--dir", output_dir])
         .output()
@@ -236,7 +236,7 @@ pub fn fork_repository(github_url: &str, output_dir: &str) -> Result<String> {
         anyhow::bail!("Failed to fork repository: {}", error);
     }
 
-    // 포크된 레포지토리 URL 가져오기
+    // Get forked repository URL
     let path = expand_path(output_dir)?;
     let url_output = Command::new("git")
         .current_dir(&path)
@@ -256,7 +256,7 @@ pub fn fork_repository(github_url: &str, output_dir: &str) -> Result<String> {
     Ok(forked_url)
 }
 
-/// 레포지토리 클론
+/// Clone repository
 pub fn clone_repository(github_url: &str, output_dir: &str) -> Result<()> {
     println!("Cloning repository: {}", github_url);
 
