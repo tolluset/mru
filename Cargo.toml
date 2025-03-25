@@ -3,7 +3,7 @@ name = "mru"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-authors = ["tolluset"]
+authors = ["tolluset <dlqud19@gmail.com>"]
 description = "MRU - Update packages across multiple repositories"
 repository = "https://github.com/tolluset/mru"
 
