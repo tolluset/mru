@@ -40,8 +40,8 @@ cargo install mru
 1. **Add repositories to your config**
 
 ```bash
-mru add-repo ~/projects/my-app https://github.com/{username}/my-app
-mru add-repo ~/projects/my-api https://github.com/{username}/my-api
+mru add-repo ~/projects/my-app https://github.com/example/my-app
+mru add-repo ~/projects/my-api https://github.com/example/my-api
 ```
 
 2. **Update a package across all repositories**
@@ -81,7 +81,7 @@ mru list-repos
 - **Clone a repository and add it to config**
 
 ```bash
-mru clone https://github.com/{username}/my-repo --add
+mru clone https://github.com/example/my-repo --add
 ```
 
 ### Package Management
@@ -127,11 +127,11 @@ default_commit_message = "chore: update dependencies"
 
 [[repositories]]
 path = "~/projects/my-app"
-github_url = "https://github.com/{username}/my-app"
+github_url = "https://github.com/example/my-app"
 
 [[repositories]]
 path = "/absolute/path/to/my-api"
-github_url = "https://github.com/{username}/my-api"
+github_url = "https://github.com/example/my-api"
 ```
 
 ## Requirements
