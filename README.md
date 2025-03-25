@@ -6,12 +6,12 @@ MRU is a command-line tool built in Rust that helps you manage package dependenc
 
 ## Features
 
-✨ **Update packages across repositories** - Update a package to the same version across all your JavaScript/TypeScript repositories  
-🔄 **Automatic Git workflow** - Creates branches, commits changes, and pushes to GitHub  
-🤖 **Pull Request automation** - Automatically creates PRs for your updates  
-📊 **Compare package versions** - See which repositories are using which versions  
-📦 **Multiple package managers** - Supports npm, yarn, and pnpm  
-🏠 **Tilde path support** - Use `~` in your repository paths for convenience
+- ✨ **Update packages across repositories** - Update a package to the same version across all your JavaScript/TypeScript repositories
+- 🔄 **Automatic Git workflow** - Creates branches, commits changes, and pushes to GitHub
+- 🤖 **Pull Request automation** - Automatically creates PRs for your updates
+- 📊 **Compare package versions** - See which repositories are using which versions
+- 📦 **Multiple package managers** - Supports npm, yarn, and pnpm
+- 🏠 **Tilde path support** - Use `~` in your repository paths for convenience
 
 ## Installation
 
@@ -26,7 +26,7 @@ cd mru
 cargo build --release
 
 # Optional: Add to your PATH
-cp target/release/mru /usr/local/bin/cargo install mru
+cp target/release/mru /usr/local/bin/
 ```
 
 ### Using Cargo
@@ -40,8 +40,8 @@ cargo install mru
 1. **Add repositories to your config**
 
 ```bash
-mru add-repo ~/projects/my-app https://github.com/tolluset/my-app
-mru add-repo ~/projects/my-api https://github.com/tolluset/my-api
+mru add-repo ~/projects/my-app https://github.com/{username}/my-app
+mru add-repo ~/projects/my-api https://github.com/{username}/my-api
 ```
 
 2. **Update a package across all repositories**
@@ -81,7 +81,7 @@ mru list-repos
 - **Clone a repository and add it to config**
 
 ```bash
-mru clone https://github.com/tolluset/my-repo --add
+mru clone https://github.com/{username}/my-repo --add
 ```
 
 ### Package Management
@@ -127,11 +127,11 @@ default_commit_message = "chore: update dependencies"
 
 [[repositories]]
 path = "~/projects/my-app"
-github_url = "https://github.com/tolluset/my-app"
+github_url = "https://github.com/{username}/my-app"
 
 [[repositories]]
 path = "/absolute/path/to/my-api"
-github_url = "https://github.com/tolluset/my-api"
+github_url = "https://github.com/{username}/my-api"
 ```
 
 ## Requirements
