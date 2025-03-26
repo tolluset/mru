@@ -1,8 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
 
-use crate::config::{Config, Repository};
+use crate::config::Config;
 use crate::git;
 use crate::github;
 use crate::package;
@@ -41,9 +40,6 @@ pub enum Commands {
     AddRepo {
         /// Local path to the repository
         path: String,
-
-        /// GitHub URL of the repository
-        github_url: String,
     },
 
     /// Remove a repository from the config
@@ -119,9 +115,6 @@ pub fn handle_update(
     );
 
     for repo in &config.repositories {
-        // Save current branch before processing
-        let original_branch = git::get_current_branch(&repo.path)?;
-
         if let Err(e) = git::update_package_workflow(
             repo,
             package,
@@ -139,19 +132,14 @@ pub fn handle_update(
                 break;
             }
         }
-
-        // Return to original branch after processing
-        if let Err(e) = git::checkout_branch(&repo.path, &original_branch, dry_run) {
-            eprintln!("Warning: Failed to return to original branch in {}: {}", repo.path, e);
-        }
     }
 
     Ok(())
 }
 
 /// Handle add repository command
-pub fn handle_add_repo(config: &mut Config, path: &str, github_url: &str) -> Result<()> {
-    match config.add_repository(path.to_string(), github_url.to_string()) {
+pub fn handle_add_repo(config: &mut Config, path: &str) -> Result<()> {
+    match config.add_repository(path.to_string()) {
         Ok(_) => {
             println!("Repository added successfully: {}", path);
             Ok(())
@@ -185,7 +173,6 @@ pub fn handle_list_repos(config: &Config) -> Result<()> {
         println!("Configured repositories:");
         for (i, repo) in config.repositories.iter().enumerate() {
             println!("{}. Path: {}", i + 1, repo.path);
-            println!("   GitHub: {}", repo.github_url);
 
             // Git 상태 확인
             match git::check_status(&repo.path) {
@@ -344,7 +331,7 @@ pub fn handle_clone(
             .to_string_lossy()
             .to_string();
 
-        handle_add_repo(config, &path, github_url)?;
+        handle_add_repo(config, &path)?;
     }
 
     Ok(())
@@ -354,7 +341,10 @@ pub fn handle_clone(
 pub fn handle_set_package_manager(config: &mut Config, name: &str) -> Result<()> {
     let valid_managers = vec!["npm", "yarn", "pnpm"];
     if !valid_managers.contains(&name) {
-        anyhow::bail!("Invalid package manager. Must be one of: {:?}", valid_managers);
+        anyhow::bail!(
+            "Invalid package manager. Must be one of: {:?}",
+            valid_managers
+        );
     }
 
     config.default_package_manager = Some(name.to_string());

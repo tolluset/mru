@@ -17,7 +17,6 @@ pub fn check_gh_cli() -> Result<bool> {
 /// Create Pull Request
 pub fn create_pr(
     repo_path: &str,
-    github_url: &str,
     branch_name: &str,
     title: &str,
     dry_run: bool,
@@ -54,6 +53,7 @@ pub fn create_pr(
         title,
         "--head",
         branch_name,
+        "--fill",
     ];
 
     if draft {

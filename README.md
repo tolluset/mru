@@ -40,8 +40,8 @@ cargo install mru
 1. **Add repositories to your config**
 
 ```bash
-mru add-repo ~/projects/my-app https://github.com/example/my-app
-mru add-repo ~/projects/my-api https://github.com/example/my-api
+mru add-repo ~/projects/my-app
+mru add-repo ~/projects/my-api
 ```
 
 2. **Update a package across all repositories**
@@ -108,6 +108,7 @@ mru set-package-manager pnpm
 ```
 
 MRU determines the package manager in the following order:
+
 1. Check repository's lock files (pnpm-lock.yaml, yarn.lock, package-lock.json)
 2. Check configured default package manager
 3. Use npm if neither is found
@@ -141,11 +142,9 @@ default_commit_message = "chore: update dependencies"
 
 [[repositories]]
 path = "~/projects/my-app"
-github_url = "https://github.com/example/my-app"
 
 [[repositories]]
 path = "/absolute/path/to/my-api"
-github_url = "https://github.com/example/my-api"
 ```
 
 ## Requirements

@@ -1,10 +1,11 @@
 use anyhow::{Context, Result};
+use std::error::Error;
 use std::path::PathBuf;
 use std::process::Command;
 
+use crate::config::Config;
 use crate::config::Repository;
 use crate::repo::expand_path;
-use crate::config::Config;
 
 /// Get current branch name
 pub fn get_current_branch(repo_path: &str) -> Result<String> {
@@ -79,27 +80,36 @@ pub fn create_branch(repo_path: &str, branch_name: &str, dry_run: bool) -> Resul
 }
 
 /// Stage changes
-pub fn stage_changes(repo_path: &str, files: &[&str], dry_run: bool) -> Result<()> {
-    let path = expand_path(repo_path)?;
-
+pub fn stage_changes(repo_path: &PathBuf, _files: &[&str], dry_run: bool) -> Result<()> {
     if dry_run {
-        println!("Would stage files in {}: {:?}", repo_path, files);
+        println!("Would stage all changes in {}", repo_path.display());
         return Ok(());
     }
 
-    println!("Staging files in {}: {:?}", repo_path, files);
+    // git add .
+    let output = Command::new("git")
+        .current_dir(repo_path)
+        .args(["add", "."])
+        .output()
+        .context("Failed to execute git add")?;
 
-    let mut cmd = Command::new("git");
-    cmd.current_dir(&path).arg("add");
-
-    for file in files {
-        cmd.arg(file);
+    if !output.status.success() {
+        let error = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("Failed to stage changes: {}", error);
     }
 
-    let status = cmd.status().context("Failed to stage changes")?;
+    // git add parent directory
+    if let Some(parent) = repo_path.parent() {
+        let output = Command::new("git")
+            .current_dir(parent)
+            .args(["add", "."])
+            .output()
+            .context("Failed to stage changes in parent directory")?;
 
-    if !status.success() {
-        anyhow::bail!("Failed to stage changes");
+        if !output.status.success() {
+            let error = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to stage changes in parent directory: {}", error);
+        }
     }
 
     Ok(())
@@ -278,16 +288,7 @@ pub fn update_package_workflow(
     crate::package::run_install_with_manager(&repo.path, &pkg_manager, dry_run)?;
 
     // 5. Stage changes
-    stage_changes(
-        &repo.path,
-        &[
-            "package.json",
-            "pnpm-lock.yaml",
-            "yarn.lock",
-            "package-lock.json",
-        ],
-        dry_run,
-    )?;
+    stage_changes(&PathBuf::from(&repo.path), &[], dry_run)?;
 
     // 6. Commit changes
     commit_changes(&repo.path, commit_message, dry_run)?;
@@ -299,7 +300,6 @@ pub fn update_package_workflow(
     if create_pr {
         if let Err(e) = crate::github::create_pr(
             &repo.path,
-            &repo.github_url,
             &branch_name,
             commit_message,
             dry_run,

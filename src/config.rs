@@ -13,7 +13,6 @@ pub struct Config {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Repository {
     pub path: String,
-    pub github_url: String,
 }
 
 impl Config {
@@ -41,7 +40,6 @@ impl Config {
             let expanded_path = expand_tilde(&repo.path)?;
             expanded_repos.push(Repository {
                 path: expanded_path,
-                github_url: repo.github_url.clone(),
             });
         }
 
@@ -64,19 +62,19 @@ impl Config {
         Ok(())
     }
 
-    pub fn add_repository(&mut self, path: String, github_url: String) -> Result<()> {
+    pub fn add_repository(&mut self, path: String) -> Result<()> {
         // Check for duplicates (after tilde expansion)
         let expanded_path = expand_tilde(&path)?;
 
         for repo in &self.repositories {
             let repo_expanded_path = expand_tilde(&repo.path)?;
-            if repo_expanded_path == expanded_path || repo.github_url == github_url {
+            if repo_expanded_path == expanded_path {
                 anyhow::bail!("Repository already exists in config");
             }
         }
 
         // Save original path (with tilde)
-        self.repositories.push(Repository { path, github_url });
+        self.repositories.push(Repository { path });
         self.save()?;
 
         Ok(())

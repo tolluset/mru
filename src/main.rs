@@ -30,8 +30,8 @@ fn main() -> Result<()> {
             )?;
         }
 
-        cli::Commands::AddRepo { path, github_url } => {
-            cli::handle_add_repo(&mut config, path, github_url)?;
+        cli::Commands::AddRepo { path } => {
+            cli::handle_add_repo(&mut config, path)?;
         }
 
         cli::Commands::RemoveRepo { path } => {
