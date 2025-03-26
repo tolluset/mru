@@ -54,6 +54,8 @@ pub fn create_pr(
         "--head",
         branch_name,
         "--fill",
+        "-a",
+        "@me",
     ];
 
     if draft {
