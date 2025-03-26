@@ -119,6 +119,9 @@ pub fn handle_update(
     );
 
     for repo in &config.repositories {
+        // Save current branch before processing
+        let original_branch = git::get_current_branch(&repo.path)?;
+
         if let Err(e) = git::update_package_workflow(
             repo,
             package,
@@ -135,6 +138,11 @@ pub fn handle_update(
                 println!("Aborting update process");
                 break;
             }
+        }
+
+        // Return to original branch after processing
+        if let Err(e) = git::checkout_branch(&repo.path, &original_branch, dry_run) {
+            eprintln!("Warning: Failed to return to original branch in {}: {}", repo.path, e);
         }
     }
 

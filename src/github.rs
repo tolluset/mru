@@ -21,6 +21,8 @@ pub fn create_pr(
     branch_name: &str,
     title: &str,
     dry_run: bool,
+    draft: bool,
+    body: Option<&str>,
 ) -> Result<String> {
     let path = expand_path(repo_path)?;
 
@@ -45,18 +47,26 @@ pub fn create_pr(
     );
 
     // Create PR
+    let mut args = vec![
+        "pr",
+        "create",
+        "--title",
+        title,
+        "--head",
+        branch_name,
+    ];
+
+    if draft {
+        args.push("--draft");
+    }
+
+    if let Some(body_text) = body {
+        args.extend_from_slice(&["--body", body_text]);
+    }
+
     let output = Command::new("gh")
         .current_dir(&path)
-        .args([
-            "pr",
-            "create",
-            "--title",
-            title,
-            "--body",
-            &format!("Automated dependency update for {}", branch_name),
-            "--head",
-            branch_name,
-        ])
+        .args(&args)
         .output()
         .context("Failed to create PR")?;
 

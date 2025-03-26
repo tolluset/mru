@@ -303,6 +303,8 @@ pub fn update_package_workflow(
             &branch_name,
             commit_message,
             dry_run,
+            true, // draft by default
+            None, // use default body
         ) {
             eprintln!("Warning: Failed to create PR: {}", e);
         }
